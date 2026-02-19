@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6366f1">
+    <title>StreakVault - Build Habits That Stick</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); min-height: 100vh; color: #333; }
+        .container { max-width: 500px; margin: 0 auto; padding: 20px; }
+        header { text-align: center; padding: 30px 0; }
+        .logo { font-size: 32px; font-weight: 800; background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; }
+        .tagline { color: #888; font-size: 14px; }
+        .stats-bar { display: flex; justify-content: space-around; background: white; padding: 20px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(99,102,241,0.1); }
+        .stat { text-align: center; }
+        .stat-value { font-size: 28px; font-weight: 800; color: #6366f1; }
+        .stat-label { font-size: 12px; color: #888; margin-top: 4px; }
+        .add-habit { background: #6366f1; color: white; border: none; border-radius: 16px; padding: 16px 24px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 20px; transition: all 0.3s; }
+        .add-habit:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
+        .habit-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: all 0.3s; }
+        .habit-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .habit-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .habit-name { font-size: 18px; font-weight: 700; }
+        .habit-emoji { font-size: 24px; margin-right: 10px; }
+        .streak-badge { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 700; }
+        .habit-actions { display: flex; gap: 10px; }
+        .btn-check { flex: 1; background: #10b981; color: white; border: none; border-radius: 12px; padding: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-check:hover { background: #059669; }
+        .btn-check.checked { background: #6b7280; }
+        .btn-skip { width: 44px; height: 44px; background: #fee2e2; border: none; border-radius: 12px; font-size: 20px; cursor: pointer; }
+        .progress-bar { height: 8px; background: #e5e7eb; border-radius: 4px; margin-top: 15px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: 4px; transition: width 0.5s ease; }
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-content { background: white; border-radius: 20px; padding: 30px; width: 100%; max-width: 400px; }
+        .modal-title { font-size: 24px; font-weight: 700; margin-bottom: 20px; color: #6366f1; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
+        .input-group input, .input-group select { width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; }
+        .input-group input:focus, .input-group select:focus { outline: none; border-color: #6366f1; }
+        .emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 15px; }
+        .emoji-btn { background: #f3f4f6; border: none; border-radius: 8px; padding: 10px; font-size: 24px; cursor: pointer; transition: all 0.2s; }
+        .emoji-btn:hover, .emoji-btn.selected { background: #6366f1; transform: scale(1.1); }
+        .btn-primary { background: #6366f1; color: white; border: none; border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; }
+        .btn-secondary { background: #f3f4f6; color: #555; border: none; border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; }
+        .hidden { display: none !important; }
+        .quote-box { background: linear-gradient(135deg, #ede9fe, #ddd6fe); border-radius: 16px; padding: 20px; margin-bottom: 20px; text-align: center; }
+        .quote-text { font-style: italic; color: #6366f1; font-size: 16px; }
+        .quote-author { margin-top: 8px; font-size: 14px; color: #888; }
+        .export-section { margin-top: 30px; padding: 20px; background: white; border-radius: 16px; }
+        .export-btn { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border: none; border-radius: 12px; padding: 14px 24px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">⚡ StreakVault</div>
+            <div class="tagline">Build habits that stick</div>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="total-habits">0</div>
+                <div class="stat-label">Habits</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="longest-streak">0</div>
+                <div class="stat-label">Best Streak</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="completed-today">0</div>
+                <div class="stat-label">Done Today</div>
+            </div>
+        </div>
+
+        <div class="quote-box">
+            <div class="quote-text" id="daily-quote">"We are what we repeatedly do. Excellence, then, is not an act, but a habit."</div>
+            <div class="quote-author">— Aristotle</div>
+        </div>
+
+        <button class="add-habit" onclick="openModal()">➕ Add New Habit</button>
+
+        <div id="habits-list"></div>
+
+        <div class="export-section">
+            <div style="font-weight: 700; margin-bottom: 10px;">📊 Export Your Progress</div>
+            <button class="export-btn" onclick="exportData()">📥 Download Data (JSON)</button>
+            <button class="export-btn" onclick="exportPDF()" style="margin-top: 10px;">📄 Generate Progress Report (PDF)</button>
+        </div>
+    </div>
+
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-title">➕ Add New Habit</div>
+            <div class="input-group">
+                <label>Choose Icon</label>
+                <div class="emoji-grid">
+                    <button class="emoji-btn" onclick="selectEmoji(this)">💪</button>
+                    <button class="emoji-btn" onclick="selectEmoji(this)">🏃</button>
+                    <button class="emoji-btn" onclick="selectEmoji(this)">📚</button>
+                    <button class="emoji-btn" onclick="selectEmoji(this)">💧</button>
+                    <button class="emoji-btn" onclick="selectEmoji(this)">🧘</button>
+                    <button class="emoji-btn" onclick="selectEmoji(this)">✍️</button>
+                    <button class="emoji-btn" onclick="selectEmoji(this)">🎸</button>
+                    <button class="emoji-btn" onclick="selectEmoji(this)">🎨</button>
+                    <button class="emoji-btn" onclick="selectEmoji(this)">🧹</button>
+                    <button class="emoji-btn" onclick="selectEmoji(this)">💰</button>
+                    <button class="emoji-btn" onclick="selectEmoji(this)">🌱</button>
+                    <button class="emoji-btn" onclick="selectEmoji(this)">😴</button>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Habit Name</label>
+                <input type="text" id="habit-name" placeholder="e.g. Morning workout">
+            </div>
+            <div class="input-group">
+                <label>Color</label>
+                <select id="habit-color">
+                    <option value="indigo">💜 Indigo</option>
+                    <option value="emerald">💚 Emerald</option>
+                    <option value="amber">💛 Amber</option>
+                    <option value="rose">❤️ Rose</option>
+                    <option value="cyan">💙 Cyan</option>
+                </select>
+            </div>
+            <button class="btn-primary" onclick="saveHabit()">💾 Save Habit</button>
+            <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        let habits = JSON.parse(localStorage.getItem('streakvault-habits') || '[]');
+        let selectedEmoji = '💪';
+
+        const quotes = [
+            { text: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", author: "Aristotle" },
+            { text: "Success is the sum of small efforts, repeated day in and day out.", author: "Robert Collier" },
+            { text: "Your future is created by what you do today, not tomorrow.", author: "Robert Kiyosaki" },
+            { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+            { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().getDay();
+            document.getElementById('daily-quote').textContent = quotes[today].text;
+            document.querySelector('.quote-author').textContent = `— ${quotes[today].author}`;
+            renderHabits();
+            updateStats();
+        });
+
+        function openModal() {
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('habit-name').value = '';
+        }
+
+        function selectEmoji(btn) {
+            document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedEmoji = btn.textContent;
+        }
+
+        function saveHabit() {
+            const name = document.getElementById('habit-name').value.trim();
+            const color = document.getElementById('habit-color').value;
+            
+            if (!name) return alert('Please enter a habit name');
+            
+            const habit = {
+                id: Date.now(),
+                name,
+                emoji: selectedEmoji,
+                color,
+                streak: 0,
+                completed: false,
+                lastCompleted: null,
+                history: []
+            };
+            
+            habits.push(habit);
+            localStorage.setItem('streakvault-habits', JSON.stringify(habits));
+            
+            closeModal();
+            renderHabits();
+            updateStats();
+        }
+
+        function toggleHabit(id) {
+            const habit = habits.find(h => h.id === id);
+            if (!habit) return;
+            
+            const today = new Date().toDateString();
+            const lastDate = habit.lastCompleted ? new Date(habit.lastCompleted).toDateString() : null;
+            
+            if (habit.completed) {
+                habit.completed = false;
+                habit.streak = Math.max(0, habit.streak - 1);
+            } else {
+                if (lastDate !== today) {
+                    habit.completed = true;
+                    habit.streak++;
+                    habit.lastCompleted = new Date().toISOString();
+                    habit.history.push(new Date().toISOString());
+                    
+                    if (habit.streak % 7 === 0) {
+                        showNotification(`🔥 ${habit.streak} day streak! Keep it up!`);
+                    }
+                }
+            }
+            
+            localStorage.setItem('streakvault-habits', JSON.stringify(habits));
+            renderHabits();
+            updateStats();
+        }
+
+        function renderHabits() {
+            const container = document.getElementById('habits-list');
+            
+            if (habits.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #888;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">🎯</div>
+                        <div>No habits yet!</div>
+                        <div style="font-size: 14px; margin-top: 5px;">Add your first habit to get started</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = habits.map(habit => `
+                <div class="habit-card" style="border-left: 4px solid ${getColor(habit.color)};">
+                    <div class="habit-header">
+                        <div style="display: flex; align-items: center;">
+                            <span class="habit-emoji">${habit.emoji}</span>
+                            <span class="habit-name">${habit.name}</span>
+                        </div>
+                        <div class="streak-badge">🔥 ${habit.streak}</div>
+                    </div>
+                    <div class="habit-actions">
+                        <button class="btn-check ${habit.completed ? 'checked' : ''}" onclick="toggleHabit(${habit.id})">
+                            ${habit.completed ? '✅ Done' : '⭕ Mark Done'}
+                        </button>
+                        <button class="btn-skip" onclick="deleteHabit(${habit.id})">🗑️</button>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${Math.min((habit.streak / 30) * 100, 100)}%;"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getColor(color) {
+            const colors = {
+                indigo: '#6366f1',
+                emerald: '#10b981',
+                amber: '#f59e0b',
+                rose: '#f43f5e',
+                cyan: '#06b6d4'
+            };
+            return colors[color] || '#6366f1';
+        }
+
+        function updateStats() {
+            document.getElementById('total-habits').textContent = habits.length;
+            
+            const maxStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak)) : 0;
+            document.getElementById('longest-streak').textContent = maxStreak;
+            
+            const completedToday = habits.filter(h => h.completed).length;
+            document.getElementById('completed-today').textContent = completedToday;
+        }
+
+        function deleteHabit(id) {
+            if (!confirm('Delete this habit?')) return;
+            habits = habits.filter(h => h.id !== id);
+            localStorage.setItem('streakvault-habits', JSON.stringify(habits));
+            renderHabits();
+            updateStats();
+        }
+
+        function exportData() {
+            const data = {
+                habits,
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `streakvault-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            showNotification('Data exported!');
+        }
+
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(20);
+            doc.text('StreakVault Progress Report', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 40);
+            
+            let y = 60;
+            habits.forEach(habit => {
+                if (y > 250) {
+                    doc.addPage();
+                    y = 20;
+                }
+                doc.setFontSize(14);
+                doc.text(`${habit.emoji} ${habit.name}`, 20, y);
+                doc.setFontSize(12);
+                doc.text(`Current Streak: ${habit.streak} days`, 20, y + 10);
+                y += 30;
+            });
+            
+            doc.save('streakvault-report.pdf');
+            showNotification('PDF report generated!');
+        }
+
+        function showNotification(message) {
+            const note = document.createElement('div');
+            note.style.cssText = 'position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #6366f1; color: white; padding: 12px 24px; border-radius: 25px; font-weight: 600; z-index: 1000; animation: fadeIn 0.3s;';
+            note.textContent = message;
+            document.body.appendChild(note);
+            setTimeout(() => note.remove(), 3000);
+        }
+    </script>
+</body>
+</html>
